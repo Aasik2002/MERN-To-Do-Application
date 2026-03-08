@@ -1,11 +1,13 @@
 // Using Express and using mongoose to connect to MongoDB and create a simple API for a to-do list application.
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 // Create an instance of Express
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/todoapp', {
@@ -16,58 +18,68 @@ mongoose.connect('mongodb://localhost:27017/todoapp', {
 });
 
 // Define a Mongoose schema and model for todo items
+// ✅ FIX 1: Changed "discription" to "description"
 const todoSchema = new mongoose.Schema({
-  title:{
+  title: {
     required: true,
     type: String
   },
-  discription: String
+  description: {
+    type: String,
+    required: true
+  }
 });
 
 // Create a Mongoose model based on the schema
 const Todo = mongoose.model('Todo', todoSchema);
 
-// create a new todo item
+// Create a new todo item
+// ✅ FIX 2: Changed "discription" to "description"
 app.post('/todos', async (req, res) => {
-  const { title, discription } = req.body;
+  const { title, description } = req.body;
 
   try {
-    const newTodo = new Todo({ title, discription }); // ✅ fixed here
+    const newTodo = new Todo({ title, description });
     await newTodo.save();
     res.status(201).json(newTodo);
   } catch (err) {
     console.error('Error creating todo:', err);
-    res.status(500).json({message :err.message });
+    res.status(500).json({ message: err.message });
   }
-}); // ✅ fixed missing bracket here
+});
 
 // Get all todo items
-app.get('/todos', async(req, res) => {
+app.get('/todos', async (req, res) => {
   try {
     const todos = await Todo.find();
     res.json(todos);
-  }
-  catch(err) {
+  } catch (err) {
     console.error('Error fetching todos:', err);
-    res.status(500).json({message :err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
 // Update a todo item by ID
-app.put('/todos/:id', async(req, res) => {
+// ✅ FIX 3: Changed "discription" to "description"
+app.put('/todos/:id', async (req, res) => {
   try {
     const id = req.params.id;
-  const { title, discription } = req.body;
-  const updatedTodo = await Todo.findByIdAndUpdate(id, { title, discription }, { new: true });
-  if (!updatedTodo) {
-    return res.status(404).json({ message: 'Todo item not found' });
-  }
-  res.json(updatedTodo);
+    const { title, description } = req.body;
+    const updatedTodo = await Todo.findByIdAndUpdate(
+      id,
+      { title, description },
+      { new: true }
+    );
+
+    if (!updatedTodo) {
+      return res.status(404).json({ message: 'Todo item not found' });
+    }
+
+    res.json(updatedTodo);
   } catch (err) {
     console.error('Error updating todo:', err);
-    res.status(500).json({message :err.message });
+    res.status(500).json({ message: err.message });
   }
-
 });
 
 // Delete a todo item by ID
@@ -86,10 +98,9 @@ app.delete('/todos/:id', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-  
 
-// Start the server on port 3000
-const PORT = 3000;
+// Start the server on port 8000
+const PORT = 8000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
